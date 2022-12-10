@@ -27,48 +27,56 @@ defmodule SupplyStacksTest do
            ] == SupplyStacks.parse_instructions(instructions)
   end
 
-  test "execute_instruction/2" do
-    initial_stacks = %{
-      1 => ["N", "Z"],
-      2 => ["D", "C", "M"],
-      3 => ["P"]
-    }
+  describe "execute_all_instructions/2" do
+    setup do
+      stacks = %{
+        1 => ["N", "Z"],
+        2 => ["D", "C", "M"],
+        3 => ["P"]
+      }
 
-    instruction = %{"move" => 1, "from" => 2, "to" => 1}
+      instructions = [
+        %{"from" => 2, "move" => 1, "to" => 1},
+        %{"from" => 1, "move" => 3, "to" => 3},
+        %{"from" => 2, "move" => 2, "to" => 1},
+        %{"from" => 1, "move" => 1, "to" => 2}
+      ]
 
-    expected_stacks = %{
-      1 => ["D", "N", "Z"],
-      2 => ["C", "M"],
-      3 => ["P"]
-    }
+      [stacks: stacks, instructions: instructions]
+    end
 
-    assert expected_stacks == SupplyStacks.execute_instruction(initial_stacks, instruction)
-  end
+    test "with crate mover 9000", %{stacks: initial_stacks, instructions: instructions} do
+      expected_stacks = %{
+        1 => ["C"],
+        2 => ["M"],
+        3 => ["Z", "N", "D", "P"]
+      }
 
-  test "execute_all_instructions/2" do
-    initial_stacks = %{
-      1 => ["N", "Z"],
-      2 => ["D", "C", "M"],
-      3 => ["P"]
-    }
+      assert expected_stacks ==
+               SupplyStacks.execute_all_instructions(
+                 %{
+                   stacks: initial_stacks,
+                   instructions: instructions
+                 },
+                 9000
+               )
+    end
 
-    instructions = [
-      %{"from" => 2, "move" => 1, "to" => 1},
-      %{"from" => 1, "move" => 3, "to" => 3},
-      %{"from" => 2, "move" => 2, "to" => 1},
-      %{"from" => 1, "move" => 1, "to" => 2}
-    ]
+    test "with crate mover 9001", %{stacks: initial_stacks, instructions: instructions} do
+      expected_stacks = %{
+        1 => ["M"],
+        2 => ["C"],
+        3 => ["D", "N", "Z", "P"]
+      }
 
-    expected_stacks = %{
-      1 => ["C"],
-      2 => ["M"],
-      3 => ["Z", "N", "D", "P"]
-    }
-
-    assert expected_stacks ==
-             SupplyStacks.execute_all_instructions(%{
-               stacks: initial_stacks,
-               instructions: instructions
-             })
+      assert expected_stacks ==
+               SupplyStacks.execute_all_instructions(
+                 %{
+                   stacks: initial_stacks,
+                   instructions: instructions
+                 },
+                 9001
+               )
+    end
   end
 end

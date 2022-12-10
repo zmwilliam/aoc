@@ -36,16 +36,20 @@ defmodule SupplyStacks do
     }
   end
 
-  def execute_instruction(stack, %{"move" => move, "from" => from, "to" => to}) do
-    {crates_to_move, stack} = pop_in(stack, [from, Access.slice(0..(move - 1))])
-    Map.update(stack, to, crates_to_move, &(Enum.reverse(crates_to_move) ++ &1))
-  end
-
-  def execute_all_instructions(%{stacks: initial_stacks, instructions: instructions}) do
+  def execute_all_instructions(
+        %{stacks: initial_stacks, instructions: instructions},
+        crate_mover_model
+      ) do
     Enum.reduce(instructions, initial_stacks, fn instruction, stack ->
-      SupplyStacks.execute_instruction(stack, instruction)
+      %{"move" => move, "from" => from, "to" => to} = instruction
+      {crates_to_move, stack} = pop_in(stack, [from, Access.slice(0..(move - 1))])
+      crate_mover = &move_crates(crate_mover_model, crates_to_move, &1)
+      Map.update(stack, to, crates_to_move, crate_mover)
     end)
   end
+
+  defp move_crates(9000, crates, stack), do: Enum.reverse(crates) ++ stack
+  defp move_crates(9001, crates, stack), do: crates ++ stack
 
   defp top_crates(stacks) do
     stacks
@@ -53,14 +57,25 @@ defmodule SupplyStacks do
     |> Enum.map_join(&List.first/1)
   end
 
-  def part_one do
+  defp read_file_and_parse_inputs do
     "input.txt"
     |> File.read!()
     |> String.split("\n\n")
     |> parse_input()
-    |> execute_all_instructions()
+  end
+
+  def part_one do
+    read_file_and_parse_inputs()
+    |> execute_all_instructions(9000)
+    |> top_crates()
+  end
+
+  def part_two do
+    read_file_and_parse_inputs()
+    |> execute_all_instructions(9001)
     |> top_crates()
   end
 end
 
-SupplyStacks.part_one() |> IO.inspect()
+SupplyStacks.part_one() |> IO.inspect(label: "Part One")
+SupplyStacks.part_two() |> IO.inspect(label: "Part Two")
