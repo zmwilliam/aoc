@@ -16,7 +16,7 @@ defmodule NoSpaceLeft do
     {[], [cwd_size + String.to_integer(file_size) | stack]}
   end
 
-  def part_one do
+  defp calculate_dir_sizes do
     "input.txt"
     |> File.read!()
     |> String.split("\n", trim: true)
@@ -24,9 +24,26 @@ defmodule NoSpaceLeft do
     |> Stream.concat(Stream.repeatedly(fn -> "$ cd .." end))
     |> Stream.transform([0], &stack_dir_sizes/2)
     |> Enum.to_list()
+  end
+
+  def part_one do
+    calculate_dir_sizes()
     |> Enum.filter(&(&1 <= 100_000))
     |> Enum.sum()
+  end
+
+  def part_two do
+    disk_size = 70_000_000
+    update_size = 30_000_000
+
+    dir_sizes = calculate_dir_sizes()
+    need_to_free = update_size + List.last(dir_sizes) - disk_size
+
+    dir_sizes
+    |> Enum.filter(&(&1 > need_to_free))
+    |> Enum.min()
   end
 end
 
 NoSpaceLeft.part_one() |> IO.inspect(label: "Part one")
+NoSpaceLeft.part_two() |> IO.inspect(label: "Part two")
